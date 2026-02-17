@@ -16,6 +16,7 @@ use App\Models\Order;
 use App\Models\PaymentGateway;
 use Config;
 use Session;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,9 +37,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-       $shurjopay = PaymentGateway::where(['status' => 1, 'type' => 'shurjopay'])->first();
+
+        $shurjopay = PaymentGateway::where(['status' => 1, 'type' => 'shurjopay'])->first();
         if ($shurjopay) {
-            
             Config::set(['shurjopay.apiCredentials.username' => $shurjopay->username]);
             Config::set(['shurjopay.apiCredentials.password' => $shurjopay->password]);
             Config::set(['shurjopay.apiCredentials.prefix' => $shurjopay->prefix]);
@@ -46,46 +47,46 @@ class AppServiceProvider extends ServiceProvider
             Config::set(['shurjopay.apiCredentials.cancel_url' => $shurjopay->return_url]);
             Config::set(['shurjopay.apiCredentials.base_url' => $shurjopay->base_url]);
         }
-        $generalsetting = GeneralSetting::where('status',1)->limit(1)->first();
-        view()->share('generalsetting',$generalsetting); 
+        $generalsetting = GeneralSetting::where('status', 1)->limit(1)->first();
+        view()->share('generalsetting', $generalsetting);
 
-        $sidecategories = Category::where('parent_id','=','0')->where('status',1)->select('id','name','slug','status','image')->get();
-        view()->share('sidecategories',$sidecategories); 
-        
-        $menucategories = Category::where('status',1)->select('id','name','slug','status','image')->get();
-        view()->share('menucategories',$menucategories); 
+        $sidecategories = Category::where('parent_id', '=', '0')->where('status', 1)->select('id', 'name', 'slug', 'status', 'image')->get();
+        view()->share('sidecategories', $sidecategories);
 
-        $contact = Contact::where('status',1)->first();
-        view()->share('contact',$contact); 
+        $menucategories = Category::where('status', 1)->select('id', 'name', 'slug', 'status', 'image')->get();
+        view()->share('menucategories', $menucategories);
 
-        $socialicons = SocialMedia::where('status',1)->get();
-        view()->share('socialicons',$socialicons);
+        $contact = Contact::where('status', 1)->first();
+        view()->share('contact', $contact);
 
-        $pages = CreatePage::where('status',1)->limit(3)->get();
-        view()->share('pages',$pages);
+        $socialicons = SocialMedia::where('status', 1)->get();
+        view()->share('socialicons', $socialicons);
 
-        $pagesright = CreatePage::where('status',1)->skip(3)->limit(10)->get();
-        view()->share('pagesright',$pagesright);
+        $pages = CreatePage::where('status', 1)->limit(3)->get();
+        view()->share('pages', $pages);
 
-        $cmnmenu = CreatePage::where('status',1)->get();
-        view()->share('cmnmenu',$cmnmenu);
+        $pagesright = CreatePage::where('status', 1)->skip(3)->limit(10)->get();
+        view()->share('pagesright', $pagesright);
 
-        $brands = Brand::where('status',1)->get();
-        view()->share('brands',$brands);
-        
-        $neworder = Order::where('order_status','1')->count();
-        view()->share('neworder',$neworder); 
-        
-        $pendingorder = Order::where('order_status','1')->latest()->limit(9)->get();
-        view()->share('pendingorder',$pendingorder); 
-        
+        $cmnmenu = CreatePage::where('status', 1)->get();
+        view()->share('cmnmenu', $cmnmenu);
+
+        $brands = Brand::where('status', 1)->get();
+        view()->share('brands', $brands);
+
+        $neworder = Order::where('order_status', '1')->count();
+        view()->share('neworder', $neworder);
+
+        $pendingorder = Order::where('order_status', '1')->latest()->limit(9)->get();
+        view()->share('pendingorder', $pendingorder);
+
         $orderstatus = OrderStatus::get();
-        view()->share('orderstatus',$orderstatus);
-        
-        $pixels = EcomPixel::where('status',1)->get();
-        view()->share('pixels',$pixels);
-        
-        $gtm_code = GoogleTagManager::where('status',1)->get();
-        view()->share('gtm_code',$gtm_code);
+        view()->share('orderstatus', $orderstatus);
+
+        $pixels = EcomPixel::where('status', 1)->get();
+        view()->share('pixels', $pixels);
+
+        $gtm_code = GoogleTagManager::where('status', 1)->get();
+        view()->share('gtm_code', $gtm_code);
     }
 }

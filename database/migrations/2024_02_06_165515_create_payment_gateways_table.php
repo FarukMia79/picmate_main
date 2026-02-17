@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('success_url')->length(155)->nullable();
             $table->string('return_url')->length(155)->nullable();
             $table->string('prefix')->length(25)->nullable();
+            $table->tinyInteger('status')->default(1);
             $table->timestamps();
         });
     }
