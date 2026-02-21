@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
@@ -11,20 +12,21 @@ use Image;
 use File;
 use DB;
 use Hash;
+
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $data = User::orderBy('id','DESC')->get();
-        return view('backEnd.users.index',compact('data'));
+        $data = User::orderBy('id', 'DESC')->get();
+        return view('backEnd.users.index', compact('data'));
     }
-    
+
     public function create()
     {
         $roles = Role::select('name')->get();
-        return view('backEnd.users.create',compact('roles'));
+        return view('backEnd.users.create', compact('roles'));
     }
-    
+
     public function store(Request $request)
     {
         $this->validate($request, [
@@ -33,115 +35,139 @@ class UserController extends Controller
             'password' => 'required|same:confirm-password',
             'roles' => 'required'
         ]);
-        // image with intervention 
+
+        // ইমেজ হ্যান্ডেলিং
         $image = $request->file('image');
-        $name =  time().'-'.$image->getClientOriginalName();
-        $name = preg_replace('"\.(jpg|jpeg|png|webp)$"', '.webp',$name);
-        $name = strtolower(preg_replace('/\s+/', '-', $name));
-        $uploadpath = 'public/uploads/users/';
-        $imageUrl = $uploadpath.$name; 
-        $img=Image::make($image->getRealPath());
-        $img->encode('webp', 90);
-        $width = 100;
-        $height = 100;
-        $img->height() > $img->width() ? $width=null : $height=null;
-        $img->resize($width, $height, function ($constraint) {
-            $constraint->aspectRatio();
-        });
-        $img->save($imageUrl);
+        if ($image) {
+            $name = time() . '-' . str_replace(' ', '-', $image->getClientOriginalName());
+            $name = preg_replace('"\.(jpg|jpeg|png|webp)$"', '.webp', $name);
+
+            // সঠিক পাথ (public/ সরানো হয়েছে)
+            $uploadpath = 'uploads/users/';
+            $imageUrl = $uploadpath . $name;
+
+            // ফোল্ডার না থাকলে তৈরি করা
+            if (!File::isDirectory(public_path($uploadpath))) {
+                File::makeDirectory(public_path($uploadpath), 0777, true, true);
+            }
+
+            $img = Image::make($image->getRealPath());
+            $img->encode('webp', 90);
+            $img->resize(100, 100, function ($constraint) {
+                $constraint->aspectRatio();
+            });
+
+            // public_path() ব্যবহার করে সেভ
+            $img->save(public_path($imageUrl));
+        } else {
+            $imageUrl = null;
+        }
 
         $input = $request->all();
         $input['password'] = Hash::make($input['password']);
-        $input['image'] = $imageUrl;
-        
+        $input['image'] = $imageUrl; // ডাটাবেসে সেভ হবে 'uploads/users/filename.webp'
+        $input['status'] = 1;
+
         $user = User::create($input);
         $user->assignRole($request->input('roles'));
-        Toastr::success('Success','Data insert successfully');
+
+        Toastr::success('Success', 'Data insert successfully');
         return redirect()->route('users.index');
     }
-    
+
     public function edit($id)
     {
         $edit_data = User::find($id);
         $roles = Role::get();
-        return view('backEnd.users.edit',compact('edit_data','roles'));
+        return view('backEnd.users.edit', compact('edit_data', 'roles'));
     }
-    
+
     public function update(Request $request)
     {
         $this->validate($request, [
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,'.$request->hidden_id,
-            'password' => 'same:confirm-password',
+            'email' => 'required|email|unique:users,email,' . $request->hidden_id,
+            'password' => 'nullable|same:confirm-password',
             'roles' => 'required'
         ]);
-        
-        $update_data = User::find($request->hidden_id);
 
-        // new password
+        $update_data = User::find($request->hidden_id);
         $input = $request->all();
-        if(!empty($input['password'])){ 
+
+        // পাসওয়ার্ড আপডেট
+        if (!empty($input['password'])) {
             $input['password'] = Hash::make($input['password']);
-        }else{
-            $input = Arr::except($input,array('password'));    
+        } else {
+            $input = Arr::except($input, array('password'));
         }
 
-        // new image
+        // নতুন ইমেজ আপডেট
         $image = $request->file('image');
-        if($image){
-            // image with intervention 
-            $name =  time().'-'.$image->getClientOriginalName();
-            $name = preg_replace('"\.(jpg|jpeg|png|webp)$"', '.webp',$name);
-            $name = strtolower(preg_replace('/\s+/', '-', $name));
-            $uploadpath = 'public/uploads/users/';
-            $imageUrl = $uploadpath.$name; 
-            $img=Image::make($image->getRealPath());
+        if ($image) {
+            $name = time() . '-' . str_replace(' ', '-', $image->getClientOriginalName());
+            $name = preg_replace('"\.(jpg|jpeg|png|webp)$"', '.webp', $name);
+
+            $uploadpath = 'uploads/users/';
+            $imageUrl = $uploadpath . $name;
+
+            $img = Image::make($image->getRealPath());
             $img->encode('webp', 90);
-            $width = 100;
-            $height = 100;
-            $img->height() > $img->width() ? $width=null : $height=null;
-            $img->resize($width, $height, function ($constraint) {
+            $img->resize(100, 100, function ($constraint) {
                 $constraint->aspectRatio();
             });
-            $img->save($imageUrl);
+
+            $img->save(public_path($imageUrl));
+
+            // পুরনো ইমেজ ডিলিট (যদি থাকে)
+            if ($update_data->image && File::exists(public_path($update_data->image))) {
+                File::delete(public_path($update_data->image));
+            }
+
             $input['image'] = $imageUrl;
-            File::delete($update_data->image);
-        }else{
+        } else {
             $input['image'] = $update_data->image;
         }
-        $input['status'] = $request->status?1:0;
+
+        $input['status'] = $request->status ? 1 : 0;
         $update_data->update($input);
 
-        // role asign
-        DB::table('model_has_roles')->where('model_id',$request->hidden_id)->delete();
+        // রোল আপডেট
+        DB::table('model_has_roles')->where('model_id', $request->hidden_id)->delete();
         $update_data->assignRole($request->input('roles'));
-        Toastr::success('Success','Data update successfully');
+
+        Toastr::success('Success', 'Data update successfully');
         return redirect()->route('users.index');
     }
- 
+
     public function inactive(Request $request)
     {
         $inactive = User::find($request->hidden_id);
         $inactive->status = 0;
         $inactive->save();
-        Toastr::success('Success','Data inactive successfully');
+        Toastr::success('Success', 'Data inactive successfully');
         return redirect()->back();
     }
+
     public function active(Request $request)
     {
         $active = User::find($request->hidden_id);
         $active->status = 1;
         $active->save();
-        Toastr::success('Success','Data active successfully');
+        Toastr::success('Success', 'Data active successfully');
         return redirect()->back();
     }
+
     public function destroy(Request $request)
     {
-
         $delete_data = User::find($request->hidden_id);
-        File::delete($delete_data->image);
+
+        // ইমেজসহ ডিলিট করা
+        if ($delete_data->image && File::exists(public_path($delete_data->image))) {
+            File::delete(public_path($delete_data->image));
+        }
+
         $delete_data->delete();
-        Toastr::success('Success','Data delete successfully');
+        Toastr::success('Success', 'Data delete successfully');
         return redirect()->back();
     }
 }
