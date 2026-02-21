@@ -2,8 +2,8 @@
 @section('title','Dashboard')
 @section('css')
 <!-- Plugins css -->
-<link href="{{asset('public/backEnd/')}}/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
-<link href="{{asset('public/backEnd/')}}/assets/libs/selectize/css/selectize.bootstrap3.css" rel="stylesheet" type="text/css" />
+<link href="{{asset('backEnd/')}}/assets/libs/flatpickr/flatpickr.min.css" rel="stylesheet" type="text/css" />
+<link href="{{asset('backEnd/')}}/assets/libs/selectize/css/selectize.bootstrap3.css" rel="stylesheet" type="text/css" />
 
 @endsection
 @section('content')
@@ -237,9 +237,9 @@
 @endsection
 @section('script')
  <!-- Plugins js-->
-        <script src="{{asset('public/backEnd/')}}/assets/libs/flatpickr/flatpickr.min.js"></script>
-        <script src="{{asset('public/backEnd/')}}/assets/libs/apexcharts/apexcharts.min.js"></script>
-        <script src="{{asset('public/backEnd/')}}/assets/libs/selectize/js/standalone/selectize.min.js"></script>
+        <script src="{{asset('backEnd/')}}/assets/libs/flatpickr/flatpickr.min.js"></script>
+        <script src="{{asset('backEnd/')}}/assets/libs/apexcharts/apexcharts.min.js"></script>
+        <script src="{{asset('backEnd/')}}/assets/libs/selectize/js/standalone/selectize.min.js"></script>
 
     <script>
 

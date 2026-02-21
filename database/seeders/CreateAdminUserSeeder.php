@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+
 class CreateAdminUserSeeder extends Seeder
 {
     /**
@@ -17,17 +18,19 @@ class CreateAdminUserSeeder extends Seeder
     public function run()
     {
         $user = User::create([
-            'name' => 'Hardik Savani', 
+            'name' => 'Hardik Savani',
             'email' => 'admin@gmail.com',
-            'password' => bcrypt('123456')
+            'password' => bcrypt('123456'),
+            'image' => 'default.png', // এই লাইনটি যোগ করুন
+            'status' => 1            // এই লাইনটিও যোগ করুন
         ]);
-      
-        $role = Role::create(['name' => 'Admin']);
-       
-        $permissions = Permission::pluck('id','id')->all();
-     
+
+        // রোল তৈরি বা খুঁজে নেওয়া (যাতে এরর না আসে)
+        $role = Role::firstOrCreate(['name' => 'Admin']);
+
+        $permissions = Permission::pluck('id', 'id')->all();
         $role->syncPermissions($permissions);
-       
+
         $user->assignRole([$role->id]);
     }
 }
